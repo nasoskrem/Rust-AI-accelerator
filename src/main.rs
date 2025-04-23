@@ -1,10 +1,11 @@
-// src/main.rs
-use kruma::{DeviceBuffer, HardwareBackend, cpu::CpuBackend};
+use kruma::backend::CpuBackend;
+use kruma::tensor::DeviceBuffer;
+use kruma::backend::HardwareBackend;
+
 
 fn main() {
     let backend = CpuBackend;
 
-    // Test with 4x4 matrices (16 elements) to work with f32x4
     let a = DeviceBuffer::from_slice(&[
         1.0, 0.0, 0.0, 0.0,
         0.0, 1.0, 0.0, 0.0,

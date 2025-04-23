@@ -1,4 +1,5 @@
-use super::{DeviceBuffer, HardwareBackend};
+use crate::tensor::DeviceBuffer;
+use crate::backend::HardwareBackend;
 use rayon::prelude::*;
 use wide::f32x4;
 
@@ -20,7 +21,6 @@ impl HardwareBackend for CpuBackend {
                 let mut sum = 0.0;
                 let mut k = 0;
     
-                // SIMD inner product
                 while k + 4 <= n {
                     let a_chunk = f32x4::new([
                         a_slice[i * n + k],
@@ -40,7 +40,6 @@ impl HardwareBackend for CpuBackend {
                     k += 4;
                 }
     
-                // Scalar remainder
                 while k < n {
                     sum += a_slice[i * n + k] * b_slice[k * n + j];
                     k += 1;

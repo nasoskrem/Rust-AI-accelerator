@@ -1,4 +1,4 @@
-# KRUMA — CPU AI Accelerator Core - Under Development
+# KRUMA — CPU AI Accelerator Core
 
 ![Version](https://img.shields.io/badge/version-0.1.2-blue)
 ![Rust](https://img.shields.io/badge/Made%20With-Rust-informational)

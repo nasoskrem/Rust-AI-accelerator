@@ -7,37 +7,48 @@ pub struct CpuBackend;
 impl HardwareBackend for CpuBackend {
     fn matmul(&self, a: &DeviceBuffer, b: &DeviceBuffer, c: &mut DeviceBuffer) {
         let n = (a.as_slice().len() as f32).sqrt() as usize;
-        
-        if n < 2 {
-            for i in 0..n {
-                for j in 0..n {
-                    let mut sum = 0.0;
-                    for k in 0..n {
-                        sum += a.as_slice()[i * n + k] * b.as_slice()[k * n + j];
-                    }
-                    c.as_mut_slice()[i * n + j] = sum;
+        let a_slice = a.as_slice();
+        let b_slice = b.as_slice();
+        let c_slice = c.as_mut_slice();
+    
+        assert_eq!(a_slice.len(), b_slice.len());
+        assert_eq!(a_slice.len(), c_slice.len());
+        assert!(n * n == a_slice.len());
+    
+        c_slice.par_chunks_mut(n).enumerate().for_each(|(i, c_row)| {
+            for j in 0..n {
+                let mut sum = 0.0;
+                let mut k = 0;
+    
+                // SIMD inner product
+                while k + 4 <= n {
+                    let a_chunk = f32x4::new([
+                        a_slice[i * n + k],
+                        a_slice[i * n + k + 1],
+                        a_slice[i * n + k + 2],
+                        a_slice[i * n + k + 3],
+                    ]);
+                    
+                    let b_chunk = f32x4::new([
+                        b_slice[k * n + j],
+                        b_slice[(k + 1) * n + j],
+                        b_slice[(k + 2) * n + j],
+                        b_slice[(k + 3) * n + j],
+                    ]);
+    
+                    sum += (a_chunk * b_chunk).reduce_add();
+                    k += 4;
                 }
+    
+                // Scalar remainder
+                while k < n {
+                    sum += a_slice[i * n + k] * b_slice[k * n + j];
+                    k += 1;
+                }
+    
+                c_row[j] = sum;
             }
-            return;
-        }
-
-        // For larger matrices, use SIMD
-        let a_simd = a.as_simd();
-        let b_simd = b.as_simd();
-        let c_simd = c.as_mut_simd();
-        
-
-        c_simd.par_iter_mut()
-            .enumerate()
-            .for_each(|(idx, c_row)| {
-                let i = idx / n;
-                let j = idx % n;
-                let mut sum = f32x4::ZERO;
-                for k in 0..n {
-                    sum += a_simd[i * n + k] * b_simd[k * n + j];
-                }
-                *c_row = sum;
-            });
+        });
     }
 
     fn relu_inplace(&self, data: &mut DeviceBuffer) {

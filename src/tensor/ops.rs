@@ -8,6 +8,7 @@ pub trait TensorOps<T> {
 }
 
 impl TensorOps<f32> for Tensor<f32,2>{
+    
     fn add(&self, other: &Self) -> Self {
         assert_eq!(self.shape, other.shape, "Shapes must match for addition");
         

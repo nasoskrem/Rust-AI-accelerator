@@ -2,7 +2,6 @@ use std::ops::{Index, IndexMut};
 use wide::f32x4;
 pub mod ops;
 
-
 pub struct DeviceBuffer {
     data: Vec<f32>,
 }
